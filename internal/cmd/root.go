@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/strscp/cli/internal/api"
@@ -28,6 +29,7 @@ var (
 	flagVerbose     bool
 	flagQuiet       bool
 	flagRaw         bool
+	flagWatch       string
 
 	outputExplicit bool // true when user passed --output explicitly
 )
@@ -52,19 +54,41 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&flagToken, "token", "t", "", "API token (overrides stored token)")
 	rootCmd.PersistentFlags().IntVarP(&flagWorkspaceID, "workspace-id", "w", 0, "workspace ID")
 	rootCmd.PersistentFlags().StringVarP(&flagProfile, "profile", "p", "", "config profile name")
-	rootCmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "table", "output format: table, json, csv")
+	rootCmd.PersistentFlags().StringVarP(&flagOutput, "output", "o", "table", "output format: table, json, csv, markdown")
 	rootCmd.PersistentFlags().BoolVar(&flagNoColor, "no-color", false, "disable colored output")
 	rootCmd.PersistentFlags().BoolVarP(&flagVerbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&flagQuiet, "quiet", "q", false, "suppress non-data output")
 	rootCmd.PersistentFlags().BoolVar(&flagRaw, "raw", false, "output raw API JSON response")
+	rootCmd.PersistentFlags().StringVar(&flagWatch, "watch", "", "re-run command at interval (e.g. 10s, 1m, 5m)")
 
-	// Track whether --output was explicitly set
+	// Track whether --output was explicitly set + handle --watch
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		outputExplicit = cmd.Flags().Changed("output")
 		// Auto-switch to JSON when piped, unless user set --output
 		if !outputExplicit && !term.IsTerminal(int(os.Stdout.Fd())) {
 			flagOutput = "json"
 		}
+
+		// Handle --watch: wrap the leaf command's RunE with a watch loop
+		if flagWatch != "" {
+			interval, err := time.ParseDuration(flagWatch)
+			if err != nil {
+				return fmt.Errorf("invalid --watch interval %q: %w", flagWatch, err)
+			}
+			if interval < 5*time.Second {
+				return fmt.Errorf("--watch interval must be at least 5s")
+			}
+			if hasAllFlag(cmd) {
+				return fmt.Errorf("--watch cannot be used with --all")
+			}
+			if cmd.RunE != nil {
+				originalRunE := cmd.RunE
+				cmd.RunE = func(c *cobra.Command, a []string) error {
+					return runWithWatch(c, a, interval, originalRunE)
+				}
+			}
+		}
+
 		return nil
 	}
 
@@ -78,6 +102,7 @@ func init() {
 	rootCmd.AddCommand(analyticsCmd)
 	rootCmd.AddCommand(workspaceCmd)
 	rootCmd.AddCommand(openCmd)
+	rootCmd.AddCommand(completionCmd)
 }
 
 // Execute runs the root command and returns the appropriate exit code.

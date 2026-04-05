@@ -76,6 +76,7 @@ starscope-cli r ls --all
 | `config get <key>` | | Get a configuration value |
 | `config list` | | List all configuration values |
 | `version` | | Show version information |
+| `completion [shell]` | | Generate shell completion scripts |
 
 Running a parent command without a subcommand defaults to `list` (e.g. `starscope-cli reviews` runs `reviews list`).
 
@@ -114,9 +115,37 @@ starscope-cli open settings     # Settings page
 ## Output formats
 
 ```bash
-starscope-cli reviews list --output table  # Default, human-readable
-starscope-cli reviews list --output json   # JSON for scripting
-starscope-cli reviews list --output csv    # CSV for spreadsheets
+starscope-cli reviews list --output table     # Default, human-readable
+starscope-cli reviews list --output json      # JSON for scripting
+starscope-cli reviews list --output csv       # CSV for spreadsheets
+starscope-cli reviews list --output markdown  # Markdown for GitHub/Slack
+```
+
+Table output includes color-coded ratings (green/yellow/red) and severity levels. Disable with `--no-color` or `NO_COLOR=1`.
+
+### Watch mode
+
+Re-run any command on an interval to monitor changes:
+
+```bash
+starscope-cli reviews list --watch 30s             # Refresh every 30 seconds
+starscope-cli analytics overview --watch 1m        # Refresh every minute
+starscope-cli insights list --watch 5m --quiet     # Quiet refresh
+```
+
+### Shell completions
+
+Generate completions for your shell:
+
+```bash
+# Bash
+source <(starscope-cli completion bash)
+
+# Zsh
+starscope-cli completion zsh > "${fpath[1]}/_starscope-cli"
+
+# Fish
+starscope-cli completion fish | source
 ```
 
 ## Automation & scripting

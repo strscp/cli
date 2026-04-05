@@ -73,6 +73,8 @@ var connectionsShowCmd = &cobra.Command{
 
 func formatConnectionList(f *output.Formatter, connections []models.Connection) error {
 	headers := []string{"ID", "PLATFORM", "NAME", "ACTIVE", "REVIEWS", "RATING", "LAST SYNCED"}
+	f.WithColumnStyle(3, output.StyleBool)
+	f.WithColumnStyle(5, output.StyleRating)
 	rows := make([][]string, len(connections))
 	for i, c := range connections {
 		rating := "-"

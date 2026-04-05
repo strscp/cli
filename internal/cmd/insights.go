@@ -129,6 +129,7 @@ var insightsShowCmd = &cobra.Command{
 
 func formatInsightList(f *output.Formatter, insights []models.Insight, meta *models.PaginationMeta) error {
 	headers := []string{"ID", "TYPE", "SEVERITY", "TITLE", "GENERATED"}
+	f.WithColumnStyle(2, output.StyleSeverity)
 	rows := make([][]string, len(insights))
 	for i, ins := range insights {
 		rows[i] = []string{

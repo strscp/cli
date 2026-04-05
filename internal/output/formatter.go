@@ -10,9 +10,10 @@ import (
 type Format string
 
 const (
-	FormatTable Format = "table"
-	FormatJSON  Format = "json"
-	FormatCSV   Format = "csv"
+	FormatTable    Format = "table"
+	FormatJSON     Format = "json"
+	FormatCSV      Format = "csv"
+	FormatMarkdown Format = "markdown"
 )
 
 // Field represents a key-value pair for detail output.
@@ -31,11 +32,16 @@ type ListMeta struct {
 	To          int `json:"to"`
 }
 
+// ColumnStyleFunc colorizes a cell value for table output.
+// It receives the cell string and noColor flag, and returns the display string.
+type ColumnStyleFunc func(value string, noColor bool) string
+
 // Formatter writes structured data to an output writer.
 type Formatter struct {
-	format  Format
-	writer  io.Writer
-	noColor bool
+	format       Format
+	writer       io.Writer
+	noColor      bool
+	columnStyles map[int]ColumnStyleFunc
 }
 
 // NewFormatter creates a new Formatter for the given format.
@@ -52,6 +58,15 @@ func (f *Formatter) SetWriter(w io.Writer) {
 	f.writer = w
 }
 
+// WithColumnStyle registers a color function for a column index (table format only).
+func (f *Formatter) WithColumnStyle(colIndex int, styleFn ColumnStyleFunc) *Formatter {
+	if f.columnStyles == nil {
+		f.columnStyles = make(map[int]ColumnStyleFunc)
+	}
+	f.columnStyles[colIndex] = styleFn
+	return f
+}
+
 // Format returns the current output format.
 func (f *Formatter) Format() Format {
 	return f.format
@@ -64,8 +79,10 @@ func (f *Formatter) FormatList(headers []string, rows [][]string) error {
 		return writeJSONList(f.writer, headers, rows, nil)
 	case FormatCSV:
 		return writeCSV(f.writer, headers, rows)
+	case FormatMarkdown:
+		return writeMarkdownList(f.writer, headers, rows)
 	default:
-		return writeTable(f.writer, headers, rows, f.noColor)
+		return writeTable(f.writer, headers, rows, f.noColor, f.columnStyles)
 	}
 }
 
@@ -76,8 +93,10 @@ func (f *Formatter) FormatListWithMeta(headers []string, rows [][]string, meta *
 		return writeJSONList(f.writer, headers, rows, meta)
 	case FormatCSV:
 		return writeCSV(f.writer, headers, rows)
+	case FormatMarkdown:
+		return writeMarkdownList(f.writer, headers, rows)
 	default:
-		return writeTable(f.writer, headers, rows, f.noColor)
+		return writeTable(f.writer, headers, rows, f.noColor, f.columnStyles)
 	}
 }
 
@@ -94,6 +113,8 @@ func (f *Formatter) FormatDetail(fields []Field) error {
 			values[i] = field.Value
 		}
 		return writeCSV(f.writer, headers, [][]string{values})
+	case FormatMarkdown:
+		return writeMarkdownDetail(f.writer, fields)
 	default:
 		return writeDetailTable(f.writer, fields, f.noColor)
 	}
@@ -114,7 +135,9 @@ func ParseFormat(s string) (Format, error) {
 		return FormatJSON, nil
 	case "csv":
 		return FormatCSV, nil
+	case "markdown", "md":
+		return FormatMarkdown, nil
 	default:
-		return "", fmt.Errorf("invalid output format %q (valid: table, json, csv)", s)
+		return "", fmt.Errorf("invalid output format %q (valid: table, json, csv, markdown)", s)
 	}
 }
