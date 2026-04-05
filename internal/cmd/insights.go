@@ -39,10 +39,6 @@ var insightsListCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f, err := newFormatter()
-		if err != nil {
-			return err
-		}
 
 		params := api.ListInsightsParams{
 			Type:         insightType,
@@ -54,12 +50,26 @@ var insightsListCmd = &cobra.Command{
 
 		ctx := context.Background()
 
+		if flagRaw {
+			raw, err := client.GetRaw(ctx, "/insights", params.ToValues())
+			if err != nil {
+				return err
+			}
+			f, _ := newFormatter()
+			return f.FormatRaw(raw)
+		}
+
+		f, err := newFormatter()
+		if err != nil {
+			return err
+		}
+
 		if insightAll {
 			insights, err := client.Insights.ListAll(ctx, params)
 			if err != nil {
 				return err
 			}
-			return formatInsightList(f, insights)
+			return formatInsightList(f, insights, nil)
 		}
 
 		resp, err := client.Insights.List(ctx, params)
@@ -67,7 +77,7 @@ var insightsListCmd = &cobra.Command{
 			return err
 		}
 
-		if err := formatInsightList(f, resp.Data); err != nil {
+		if err := formatInsightList(f, resp.Data, &resp.Meta); err != nil {
 			return err
 		}
 
@@ -88,16 +98,27 @@ var insightsShowCmd = &cobra.Command{
 			return fmt.Errorf("invalid insight ID: %s", args[0])
 		}
 
+		ctx := context.Background()
 		client, err := newAPIClient()
 		if err != nil {
 			return err
 		}
+
+		if flagRaw {
+			raw, err := client.GetRaw(ctx, fmt.Sprintf("/insights/%d", id), nil)
+			if err != nil {
+				return err
+			}
+			f, _ := newFormatter()
+			return f.FormatRaw(raw)
+		}
+
 		f, err := newFormatter()
 		if err != nil {
 			return err
 		}
 
-		insight, err := client.Insights.Get(context.Background(), id)
+		insight, err := client.Insights.Get(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -106,7 +127,7 @@ var insightsShowCmd = &cobra.Command{
 	},
 }
 
-func formatInsightList(f *output.Formatter, insights []models.Insight) error {
+func formatInsightList(f *output.Formatter, insights []models.Insight, meta *models.PaginationMeta) error {
 	headers := []string{"ID", "TYPE", "SEVERITY", "TITLE", "GENERATED"}
 	rows := make([][]string, len(insights))
 	for i, ins := range insights {
@@ -117,6 +138,9 @@ func formatInsightList(f *output.Formatter, insights []models.Insight) error {
 			ins.Title,
 			ins.GeneratedAt,
 		}
+	}
+	if meta != nil {
+		return f.FormatListWithMeta(headers, rows, listMeta(*meta))
 	}
 	return f.FormatList(headers, rows)
 }

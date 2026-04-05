@@ -65,7 +65,7 @@ func FetchAllPagesWithProgress[T any](ctx context.Context, c *Client, path strin
 
 // FetchPage fetches a single page and returns the raw JSON for passthrough.
 func FetchPage(ctx context.Context, c *Client, path string, params url.Values) (json.RawMessage, error) {
-	raw, err := c.getRaw(ctx, path, params)
+	raw, err := c.GetRaw(ctx, path, params)
 	if err != nil {
 		return nil, err
 	}

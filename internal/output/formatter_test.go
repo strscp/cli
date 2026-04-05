@@ -57,6 +57,25 @@ func TestFormatList_JSON(t *testing.T) {
 	assert.Contains(t, out, `"Alpha"`)
 }
 
+func TestFormatListWithMeta_JSON(t *testing.T) {
+	f := NewFormatter(FormatJSON, false)
+	buf := &bytes.Buffer{}
+	f.SetWriter(buf)
+
+	headers := []string{"ID", "NAME"}
+	rows := [][]string{{"1", "Alpha"}}
+	meta := &ListMeta{CurrentPage: 1, LastPage: 3, PerPage: 15, Total: 42, From: 1, To: 1}
+
+	err := f.FormatListWithMeta(headers, rows, meta)
+	require.NoError(t, err)
+
+	out := buf.String()
+	assert.Contains(t, out, `"data"`)
+	assert.Contains(t, out, `"meta"`)
+	assert.Contains(t, out, `"total": 42`)
+	assert.Contains(t, out, `"last_page": 3`)
+}
+
 func TestFormatList_CSV(t *testing.T) {
 	f := NewFormatter(FormatCSV, false)
 	buf := &bytes.Buffer{}

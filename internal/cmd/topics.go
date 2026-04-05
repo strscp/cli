@@ -36,10 +36,6 @@ var topicsListCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f, err := newFormatter()
-		if err != nil {
-			return err
-		}
 
 		params := api.ListTopicsParams{
 			ConnectionID: topicConnectionID,
@@ -49,12 +45,26 @@ var topicsListCmd = &cobra.Command{
 
 		ctx := context.Background()
 
+		if flagRaw {
+			raw, err := client.GetRaw(ctx, "/topics", params.ToValues())
+			if err != nil {
+				return err
+			}
+			f, _ := newFormatter()
+			return f.FormatRaw(raw)
+		}
+
+		f, err := newFormatter()
+		if err != nil {
+			return err
+		}
+
 		if topicAll {
 			topics, err := client.Topics.ListAll(ctx, params)
 			if err != nil {
 				return err
 			}
-			return formatTopicList(f, topics)
+			return formatTopicList(f, topics, nil)
 		}
 
 		resp, err := client.Topics.List(ctx, params)
@@ -62,7 +72,7 @@ var topicsListCmd = &cobra.Command{
 			return err
 		}
 
-		if err := formatTopicList(f, resp.Data); err != nil {
+		if err := formatTopicList(f, resp.Data, &resp.Meta); err != nil {
 			return err
 		}
 
@@ -83,16 +93,27 @@ var topicsShowCmd = &cobra.Command{
 			return fmt.Errorf("invalid topic ID: %s", args[0])
 		}
 
+		ctx := context.Background()
 		client, err := newAPIClient()
 		if err != nil {
 			return err
 		}
+
+		if flagRaw {
+			raw, err := client.GetRaw(ctx, fmt.Sprintf("/topics/%d", id), nil)
+			if err != nil {
+				return err
+			}
+			f, _ := newFormatter()
+			return f.FormatRaw(raw)
+		}
+
 		f, err := newFormatter()
 		if err != nil {
 			return err
 		}
 
-		topic, err := client.Topics.Get(context.Background(), id)
+		topic, err := client.Topics.Get(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -102,10 +123,10 @@ var topicsShowCmd = &cobra.Command{
 }
 
 var topicsReviewsCmd = &cobra.Command{
-	Use:   "reviews <topic-id>",
-	Short: "List reviews for a topic",
+	Use:     "reviews <topic-id>",
+	Short:   "List reviews for a topic",
 	Example: `  starscope-cli topics reviews 42`,
-	Args:  cobra.ExactArgs(1),
+	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -116,17 +137,30 @@ var topicsReviewsCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		ctx := context.Background()
+
+		if flagRaw {
+			params := fmt.Sprintf("/topics/%d/reviews", id)
+			raw, err := client.GetRaw(ctx, params, nil)
+			if err != nil {
+				return err
+			}
+			f, _ := newFormatter()
+			return f.FormatRaw(raw)
+		}
+
 		f, err := newFormatter()
 		if err != nil {
 			return err
 		}
 
-		resp, err := client.Topics.Reviews(context.Background(), id, topicPerPage, topicPage)
+		resp, err := client.Topics.Reviews(ctx, id, topicPerPage, topicPage)
 		if err != nil {
 			return err
 		}
 
-		if err := formatReviewList(f, resp.Data); err != nil {
+		if err := formatReviewList(f, resp.Data, &resp.Meta); err != nil {
 			return err
 		}
 
@@ -135,7 +169,7 @@ var topicsReviewsCmd = &cobra.Command{
 	},
 }
 
-func formatTopicList(f *output.Formatter, topics []models.Topic) error {
+func formatTopicList(f *output.Formatter, topics []models.Topic, meta *models.PaginationMeta) error {
 	headers := []string{"ID", "LABEL", "REVIEWS", "AVG RATING", "AVG SENTIMENT"}
 	rows := make([][]string, len(topics))
 	for i, t := range topics {
@@ -154,6 +188,9 @@ func formatTopicList(f *output.Formatter, topics []models.Topic) error {
 			avgRating,
 			avgSentiment,
 		}
+	}
+	if meta != nil {
+		return f.FormatListWithMeta(headers, rows, listMeta(*meta))
 	}
 	return f.FormatList(headers, rows)
 }

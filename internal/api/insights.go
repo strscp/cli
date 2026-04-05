@@ -22,7 +22,7 @@ type ListInsightsParams struct {
 	Page         int
 }
 
-func (p ListInsightsParams) toValues() url.Values {
+func (p ListInsightsParams) ToValues() url.Values {
 	v := make(url.Values)
 	if p.Type != "" {
 		v.Set("type", p.Type)
@@ -45,7 +45,7 @@ func (p ListInsightsParams) toValues() url.Values {
 // List returns a paginated list of insights.
 func (s *InsightsService) List(ctx context.Context, params ListInsightsParams) (*models.PaginatedResponse[models.Insight], error) {
 	var resp models.PaginatedResponse[models.Insight]
-	if err := s.client.get(ctx, "/insights", params.toValues(), &resp); err != nil {
+	if err := s.client.get(ctx, "/insights", params.ToValues(), &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -53,7 +53,7 @@ func (s *InsightsService) List(ctx context.Context, params ListInsightsParams) (
 
 // ListAll fetches all pages of insights.
 func (s *InsightsService) ListAll(ctx context.Context, params ListInsightsParams) ([]models.Insight, error) {
-	return FetchAllPages[models.Insight](ctx, s.client, "/insights", params.toValues())
+	return FetchAllPages[models.Insight](ctx, s.client, "/insights", params.ToValues())
 }
 
 // Get returns a single insight by ID.

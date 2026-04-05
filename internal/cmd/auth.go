@@ -28,7 +28,9 @@ var authLoginCmd = &cobra.Command{
 			return err
 		}
 
+		silent := flagToken != "" || flagQuiet
 		token := flagToken
+
 		if token == "" {
 			fmt.Println("Authenticate with the Starscope API.")
 			fmt.Println()
@@ -57,13 +59,19 @@ var authLoginCmd = &cobra.Command{
 		apiURL := cfg.ResolveAPIURL(flagAPIURL)
 		client := api.NewClient(apiURL, token)
 
-		fmt.Print("Validating token... ")
+		if !silent {
+			fmt.Print("Validating token... ")
+		}
 		ws, err := client.Workspace.Show(context.Background())
 		if err != nil {
-			fmt.Println("failed")
+			if !silent {
+				fmt.Println("failed")
+			}
 			return fmt.Errorf("token validation failed: %w", err)
 		}
-		fmt.Println("ok")
+		if !silent {
+			fmt.Println("ok")
+		}
 
 		// Store token and workspace info
 		profile := cfg.CurrentProfile()
@@ -78,9 +86,11 @@ var authLoginCmd = &cobra.Command{
 			return fmt.Errorf("saving config: %w", err)
 		}
 
-		fmt.Printf("Authenticated as workspace '%s' (%s plan). Token stored securely.\n", ws.Name, ws.PlanTier)
-		fmt.Println()
-		fmt.Println("Run 'starscope-cli help' to see all available commands.")
+		if !silent {
+			fmt.Printf("Authenticated as workspace '%s' (%s plan). Token stored securely.\n", ws.Name, ws.PlanTier)
+			fmt.Println()
+			fmt.Println("Run 'starscope-cli help' to see all available commands.")
+		}
 		return nil
 	},
 }

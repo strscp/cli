@@ -43,10 +43,6 @@ var reviewsListCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		f, err := newFormatter()
-		if err != nil {
-			return err
-		}
 
 		params := api.ListReviewsParams{
 			ConnectionID: reviewConnectionID,
@@ -61,12 +57,26 @@ var reviewsListCmd = &cobra.Command{
 
 		ctx := context.Background()
 
+		if flagRaw {
+			raw, err := client.GetRaw(ctx, "/reviews", params.ToValues())
+			if err != nil {
+				return err
+			}
+			f, _ := newFormatter()
+			return f.FormatRaw(raw)
+		}
+
+		f, err := newFormatter()
+		if err != nil {
+			return err
+		}
+
 		if reviewAll {
 			reviews, err := client.Reviews.ListAll(ctx, params)
 			if err != nil {
 				return err
 			}
-			return formatReviewList(f, reviews)
+			return formatReviewList(f, reviews, nil)
 		}
 
 		resp, err := client.Reviews.List(ctx, params)
@@ -74,7 +84,7 @@ var reviewsListCmd = &cobra.Command{
 			return err
 		}
 
-		if err := formatReviewList(f, resp.Data); err != nil {
+		if err := formatReviewList(f, resp.Data, &resp.Meta); err != nil {
 			return err
 		}
 
@@ -95,16 +105,27 @@ var reviewsShowCmd = &cobra.Command{
 			return fmt.Errorf("invalid review ID: %s", args[0])
 		}
 
+		ctx := context.Background()
 		client, err := newAPIClient()
 		if err != nil {
 			return err
 		}
+
+		if flagRaw {
+			raw, err := client.GetRaw(ctx, fmt.Sprintf("/reviews/%d", id), nil)
+			if err != nil {
+				return err
+			}
+			f, _ := newFormatter()
+			return f.FormatRaw(raw)
+		}
+
 		f, err := newFormatter()
 		if err != nil {
 			return err
 		}
 
-		review, err := client.Reviews.Get(context.Background(), id)
+		review, err := client.Reviews.Get(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -113,7 +134,7 @@ var reviewsShowCmd = &cobra.Command{
 	},
 }
 
-func formatReviewList(f *output.Formatter, reviews []models.Review) error {
+func formatReviewList(f *output.Formatter, reviews []models.Review, meta *models.PaginationMeta) error {
 	headers := []string{"ID", "PLATFORM", "AUTHOR", "RATING", "PUBLISHED", "TITLE"}
 	rows := make([][]string, len(reviews))
 	for i, r := range reviews {
@@ -129,6 +150,9 @@ func formatReviewList(f *output.Formatter, reviews []models.Review) error {
 			r.PublishedAt,
 			title,
 		}
+	}
+	if meta != nil {
+		return f.FormatListWithMeta(headers, rows, listMeta(*meta))
 	}
 	return f.FormatList(headers, rows)
 }

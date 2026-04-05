@@ -174,8 +174,8 @@ func (c *Client) get(ctx context.Context, path string, params url.Values, v any)
 	return nil
 }
 
-// getRaw performs a GET request and returns the raw JSON bytes.
-func (c *Client) getRaw(ctx context.Context, path string, params url.Values) ([]byte, error) {
+// GetRaw performs a GET request and returns the raw JSON bytes.
+func (c *Client) GetRaw(ctx context.Context, path string, params url.Values) ([]byte, error) {
 	req, err := c.newRequest(ctx, http.MethodGet, path, params)
 	if err != nil {
 		return nil, err

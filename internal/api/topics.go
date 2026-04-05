@@ -20,7 +20,7 @@ type ListTopicsParams struct {
 	Page         int
 }
 
-func (p ListTopicsParams) toValues() url.Values {
+func (p ListTopicsParams) ToValues() url.Values {
 	v := make(url.Values)
 	if p.ConnectionID > 0 {
 		v.Set("connection_id", fmt.Sprintf("%d", p.ConnectionID))
@@ -37,7 +37,7 @@ func (p ListTopicsParams) toValues() url.Values {
 // List returns a paginated list of topics.
 func (s *TopicsService) List(ctx context.Context, params ListTopicsParams) (*models.PaginatedResponse[models.Topic], error) {
 	var resp models.PaginatedResponse[models.Topic]
-	if err := s.client.get(ctx, "/topics", params.toValues(), &resp); err != nil {
+	if err := s.client.get(ctx, "/topics", params.ToValues(), &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -45,7 +45,7 @@ func (s *TopicsService) List(ctx context.Context, params ListTopicsParams) (*mod
 
 // ListAll fetches all pages of topics.
 func (s *TopicsService) ListAll(ctx context.Context, params ListTopicsParams) ([]models.Topic, error) {
-	return FetchAllPages[models.Topic](ctx, s.client, "/topics", params.toValues())
+	return FetchAllPages[models.Topic](ctx, s.client, "/topics", params.ToValues())
 }
 
 // Get returns a single topic by ID.

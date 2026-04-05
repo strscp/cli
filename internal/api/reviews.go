@@ -25,7 +25,7 @@ type ListReviewsParams struct {
 	Page         int
 }
 
-func (p ListReviewsParams) toValues() url.Values {
+func (p ListReviewsParams) ToValues() url.Values {
 	v := make(url.Values)
 	if p.ConnectionID > 0 {
 		v.Set("connection_id", fmt.Sprintf("%d", p.ConnectionID))
@@ -57,7 +57,7 @@ func (p ListReviewsParams) toValues() url.Values {
 // List returns a paginated list of reviews.
 func (s *ReviewsService) List(ctx context.Context, params ListReviewsParams) (*models.PaginatedResponse[models.Review], error) {
 	var resp models.PaginatedResponse[models.Review]
-	if err := s.client.get(ctx, "/reviews", params.toValues(), &resp); err != nil {
+	if err := s.client.get(ctx, "/reviews", params.ToValues(), &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -65,7 +65,7 @@ func (s *ReviewsService) List(ctx context.Context, params ListReviewsParams) (*m
 
 // ListAll fetches all pages of reviews.
 func (s *ReviewsService) ListAll(ctx context.Context, params ListReviewsParams) ([]models.Review, error) {
-	return FetchAllPages[models.Review](ctx, s.client, "/reviews", params.toValues())
+	return FetchAllPages[models.Review](ctx, s.client, "/reviews", params.ToValues())
 }
 
 // Get returns a single review by ID.
