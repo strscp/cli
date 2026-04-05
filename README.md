@@ -113,6 +113,92 @@ starscope-cli reviews list --output json   # JSON for scripting
 starscope-cli reviews list --output csv    # CSV for spreadsheets
 ```
 
+## Automation & scripting
+
+The CLI is designed to work well with AI agents, shell scripts, and CI pipelines.
+
+### Auto-JSON when piped
+
+When stdout is not a TTY (piped or redirected), the output format automatically switches to JSON. No flag needed:
+
+```bash
+starscope-cli reviews list | jq '.data[].rating'  # auto-JSON
+starscope-cli reviews list --output table | cat    # explicit override
+```
+
+### Raw API responses
+
+Use `--raw` to get the unprocessed API response -- useful for debugging or when you need fields the CLI doesn't display:
+
+```bash
+starscope-cli reviews show 42 --raw
+starscope-cli reviews list --raw | jq '.meta'
+```
+
+### Quiet mode
+
+Use `--quiet` / `-q` to suppress all non-data output (pagination footers, progress indicators):
+
+```bash
+starscope-cli reviews list --all --quiet
+```
+
+### Non-interactive auth
+
+Authenticate without prompts by passing the token directly:
+
+```bash
+starscope-cli auth login --token "$STARSCOPE_TOKEN"
+```
+
+Or set the environment variable to skip auth entirely:
+
+```bash
+export STARSCOPE_TOKEN=your-token
+starscope-cli reviews list
+```
+
+### Structured errors
+
+When output is JSON, errors are written to stderr as structured JSON:
+
+```json
+{"error": "not_found", "message": "Resource not found", "exit_code": 3}
+```
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Authentication error (401) |
+| 2 | Forbidden (403) |
+| 3 | Not found (404) |
+| 4 | Validation error (422) |
+| 5 | Rate limited (429) |
+| 6 | Other API error |
+| 7 | Configuration / usage error |
+
+### Example: agent workflow
+
+```bash
+#!/bin/bash
+set -e
+
+export STARSCOPE_TOKEN="$1"
+
+# Fetch all reviews as JSON, suppress progress output
+reviews=$(starscope-cli reviews list --all --quiet)
+
+# Check exit code and parse
+if [ $? -eq 0 ]; then
+  echo "$reviews" | jq '[.[] | select(.rating <= 2)]' > low_rated.json
+fi
+
+# Get raw API response for a specific review
+starscope-cli reviews show 42 --raw | jq '.data.sentiment_score'
+```
+
 ## Configuration
 
 Configuration is stored at `~/.config/starscope-cli/config.yaml`. API tokens are stored securely in the OS keychain.
