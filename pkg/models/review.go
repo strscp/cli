@@ -14,12 +14,12 @@ type Review struct {
 	ResponseText   *string     `json:"response_text"`
 	RespondedAt    *string     `json:"responded_at"`
 	Sentiment      *string     `json:"sentiment"`
-	SentimentScore *float64    `json:"sentiment_score"`
+	SentimentScore *FlexFloat  `json:"sentiment_score"`
 	Summary        *string     `json:"summary"`
 	Topics         []string    `json:"topics"`
 	Keywords       []string    `json:"keywords"`
 	CustomerIntent *string     `json:"customer_intent"`
-	QualityScore   *float64    `json:"quality_score"`
+	QualityScore   *FlexFloat  `json:"quality_score"`
 	AnalyzedAt     *string     `json:"analyzed_at"`
 	Connection     *Connection `json:"connection,omitempty"`
 }
