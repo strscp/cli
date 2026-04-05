@@ -12,8 +12,9 @@ import (
 )
 
 var topicsCmd = &cobra.Command{
-	Use:   "topics",
-	Short: "Manage review topics",
+	Use:     "topics",
+	Aliases: []string{"t", "top"},
+	Short:   "Manage review topics",
 }
 
 var (
@@ -24,8 +25,12 @@ var (
 )
 
 var topicsListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List topics",
+	Use:     "list",
+	Aliases: []string{"ls"},
+	Short:   "List topics",
+	Example: `  starscope-cli topics list
+  starscope-cli topics list --connection-id 5
+  starscope-cli t ls --output csv`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newAPIClient()
 		if err != nil {
@@ -61,20 +66,17 @@ var topicsListCmd = &cobra.Command{
 			return err
 		}
 
-		if flagOutput == "table" {
-			fmt.Printf("\nShowing %d-%d of %d topics (page %d/%d)\n",
-				resp.Meta.From, resp.Meta.To, resp.Meta.Total,
-				resp.Meta.CurrentPage, resp.Meta.LastPage)
-		}
-
+		paginationFooter("topics", resp.Meta)
 		return nil
 	},
 }
 
 var topicsShowCmd = &cobra.Command{
-	Use:   "show <id>",
-	Short: "Show a topic",
-	Args:  cobra.ExactArgs(1),
+	Use:     "show <id>",
+	Aliases: []string{"s"},
+	Short:   "Show a topic",
+	Example: `  starscope-cli topics show 42`,
+	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -102,6 +104,7 @@ var topicsShowCmd = &cobra.Command{
 var topicsReviewsCmd = &cobra.Command{
 	Use:   "reviews <topic-id>",
 	Short: "List reviews for a topic",
+	Example: `  starscope-cli topics reviews 42`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := strconv.Atoi(args[0])
@@ -127,12 +130,7 @@ var topicsReviewsCmd = &cobra.Command{
 			return err
 		}
 
-		if flagOutput == "table" {
-			fmt.Printf("\nShowing %d-%d of %d reviews (page %d/%d)\n",
-				resp.Meta.From, resp.Meta.To, resp.Meta.Total,
-				resp.Meta.CurrentPage, resp.Meta.LastPage)
-		}
-
+		paginationFooter("reviews", resp.Meta)
 		return nil
 	},
 }
@@ -194,4 +192,5 @@ func init() {
 	topicsCmd.AddCommand(topicsListCmd)
 	topicsCmd.AddCommand(topicsShowCmd)
 	topicsCmd.AddCommand(topicsReviewsCmd)
+	defaultToList(topicsCmd, topicsListCmd)
 }

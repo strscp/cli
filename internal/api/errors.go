@@ -66,7 +66,16 @@ type ValidationError struct {
 }
 
 func (e *ValidationError) Error() string {
-	return "validation failed"
+	if len(e.Errors) == 0 {
+		return "validation failed"
+	}
+	msg := "validation failed:"
+	for field, errs := range e.Errors {
+		for _, err := range errs {
+			msg += fmt.Sprintf("\n  %s: %s", field, err)
+		}
+	}
+	return msg
 }
 
 // apiErrorResponse matches the JSON error shape from the Starscope API.

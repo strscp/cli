@@ -8,6 +8,7 @@ import (
 	"github.com/strscp/cli/internal/api"
 	"github.com/strscp/cli/internal/config"
 	"github.com/strscp/cli/internal/output"
+	"github.com/strscp/cli/pkg/models"
 )
 
 var (
@@ -52,6 +53,7 @@ func init() {
 	rootCmd.AddCommand(connectionsCmd)
 	rootCmd.AddCommand(analyticsCmd)
 	rootCmd.AddCommand(workspaceCmd)
+	rootCmd.AddCommand(openCmd)
 }
 
 // Execute runs the root command.
@@ -96,6 +98,26 @@ func newAPIClient() (*api.Client, error) {
 	}
 
 	return api.NewClient(apiURL, token, opts...), nil
+}
+
+// paginationFooter prints pagination info and a next-page hint for table output.
+func paginationFooter(resource string, meta models.PaginationMeta) {
+	if flagOutput != "table" {
+		return
+	}
+	fmt.Printf("\nShowing %d-%d of %d %s (page %d/%d)\n",
+		meta.From, meta.To, meta.Total, resource,
+		meta.CurrentPage, meta.LastPage)
+	if meta.CurrentPage < meta.LastPage {
+		fmt.Printf("Use --page %d for the next page, or --all to fetch everything.\n", meta.CurrentPage+1)
+	}
+}
+
+// defaultToList makes the parent command run its "list" subcommand when no subcommand is given.
+func defaultToList(parent *cobra.Command, listCmd *cobra.Command) {
+	parent.RunE = func(cmd *cobra.Command, args []string) error {
+		return listCmd.RunE(cmd, args)
+	}
 }
 
 // newFormatter creates an output formatter from flags.

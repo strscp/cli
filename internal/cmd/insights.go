@@ -13,8 +13,9 @@ import (
 )
 
 var insightsCmd = &cobra.Command{
-	Use:   "insights",
-	Short: "Manage AI insights",
+	Use:     "insights",
+	Aliases: []string{"i", "ins"},
+	Short:   "Manage AI insights",
 }
 
 var (
@@ -27,8 +28,12 @@ var (
 )
 
 var insightsListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List insights",
+	Use:     "list",
+	Aliases: []string{"ls"},
+	Short:   "List insights",
+	Example: `  starscope-cli insights list
+  starscope-cli insights list --type trend --severity critical
+  starscope-cli i ls --output json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newAPIClient()
 		if err != nil {
@@ -66,20 +71,17 @@ var insightsListCmd = &cobra.Command{
 			return err
 		}
 
-		if flagOutput == "table" {
-			fmt.Printf("\nShowing %d-%d of %d insights (page %d/%d)\n",
-				resp.Meta.From, resp.Meta.To, resp.Meta.Total,
-				resp.Meta.CurrentPage, resp.Meta.LastPage)
-		}
-
+		paginationFooter("insights", resp.Meta)
 		return nil
 	},
 }
 
 var insightsShowCmd = &cobra.Command{
-	Use:   "show <id>",
-	Short: "Show an insight",
-	Args:  cobra.ExactArgs(1),
+	Use:     "show <id>",
+	Aliases: []string{"s"},
+	Short:   "Show an insight",
+	Example: `  starscope-cli insights show 42`,
+	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -145,4 +147,5 @@ func init() {
 
 	insightsCmd.AddCommand(insightsListCmd)
 	insightsCmd.AddCommand(insightsShowCmd)
+	defaultToList(insightsCmd, insightsListCmd)
 }

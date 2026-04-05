@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/strscp/cli/pkg/models"
@@ -12,7 +14,13 @@ import (
 
 // FetchAllPages iterates through all pages of a paginated endpoint,
 // collecting all items. It paces requests at 1/sec to respect rate limits.
+// Progress is printed to stderr.
 func FetchAllPages[T any](ctx context.Context, c *Client, path string, params url.Values) ([]T, error) {
+	return FetchAllPagesWithProgress[T](ctx, c, path, params, os.Stderr)
+}
+
+// FetchAllPagesWithProgress iterates through all pages with progress output.
+func FetchAllPagesWithProgress[T any](ctx context.Context, c *Client, path string, params url.Values, progress io.Writer) ([]T, error) {
 	var all []T
 	page := 1
 
@@ -31,7 +39,14 @@ func FetchAllPages[T any](ctx context.Context, c *Client, path string, params ur
 
 		all = append(all, resp.Data...)
 
+		if progress != nil && resp.Meta.LastPage > 1 {
+			fmt.Fprintf(progress, "\rFetching page %d/%d (%d items)...", resp.Meta.CurrentPage, resp.Meta.LastPage, len(all))
+		}
+
 		if resp.Meta.CurrentPage >= resp.Meta.LastPage {
+			if progress != nil && resp.Meta.LastPage > 1 {
+				fmt.Fprintf(progress, "\rFetched %d items across %d pages.    \n", len(all), resp.Meta.LastPage)
+			}
 			break
 		}
 

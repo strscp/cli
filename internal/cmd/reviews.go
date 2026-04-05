@@ -13,8 +13,9 @@ import (
 )
 
 var reviewsCmd = &cobra.Command{
-	Use:   "reviews",
-	Short: "Manage reviews",
+	Use:     "reviews",
+	Aliases: []string{"r", "rev"},
+	Short:   "Manage reviews",
 }
 
 var (
@@ -30,8 +31,13 @@ var (
 )
 
 var reviewsListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List reviews",
+	Use:     "list",
+	Aliases: []string{"ls"},
+	Short:   "List reviews",
+	Example: `  starscope-cli reviews list
+  starscope-cli reviews list --platform trustpilot --rating-min 4
+  starscope-cli reviews list --date-from 2026-01-01 --output json
+  starscope-cli r ls --all`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newAPIClient()
 		if err != nil {
@@ -72,20 +78,17 @@ var reviewsListCmd = &cobra.Command{
 			return err
 		}
 
-		if flagOutput == "table" {
-			fmt.Printf("\nShowing %d-%d of %d reviews (page %d/%d)\n",
-				resp.Meta.From, resp.Meta.To, resp.Meta.Total,
-				resp.Meta.CurrentPage, resp.Meta.LastPage)
-		}
-
+		paginationFooter("reviews", resp.Meta)
 		return nil
 	},
 }
 
 var reviewsShowCmd = &cobra.Command{
-	Use:   "show <id>",
-	Short: "Show a review",
-	Args:  cobra.ExactArgs(1),
+	Use:     "show <id>",
+	Aliases: []string{"s"},
+	Short:   "Show a review",
+	Example: `  starscope-cli reviews show 42`,
+	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -176,4 +179,5 @@ func init() {
 
 	reviewsCmd.AddCommand(reviewsListCmd)
 	reviewsCmd.AddCommand(reviewsShowCmd)
+	defaultToList(reviewsCmd, reviewsListCmd)
 }

@@ -79,6 +79,8 @@ var authLoginCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Authenticated as workspace '%s' (%s plan). Token stored securely.\n", ws.Name, ws.PlanTier)
+		fmt.Println()
+		fmt.Println("Run 'starscope-cli help' to see all available commands.")
 		return nil
 	},
 }

@@ -12,8 +12,9 @@ import (
 )
 
 var analyticsCmd = &cobra.Command{
-	Use:   "analytics",
-	Short: "View analytics and metrics",
+	Use:     "analytics",
+	Aliases: []string{"a", "ana"},
+	Short:   "View analytics and metrics",
 }
 
 var (
@@ -24,6 +25,8 @@ var (
 var analyticsOverviewCmd = &cobra.Command{
 	Use:   "overview",
 	Short: "Show analytics overview",
+	Example: `  starscope-cli analytics overview
+  starscope-cli a overview --connection-id 5`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newAPIClient()
 		if err != nil {
@@ -48,6 +51,8 @@ var analyticsOverviewCmd = &cobra.Command{
 var analyticsMetricsCmd = &cobra.Command{
 	Use:   "metrics",
 	Short: "Show analytics metrics",
+	Example: `  starscope-cli analytics metrics
+  starscope-cli a metrics --period 30 --connection-id 5`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newAPIClient()
 		if err != nil {

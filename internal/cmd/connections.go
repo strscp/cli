@@ -11,13 +11,17 @@ import (
 )
 
 var connectionsCmd = &cobra.Command{
-	Use:   "connections",
-	Short: "Manage review platform connections",
+	Use:     "connections",
+	Aliases: []string{"c", "conn"},
+	Short:   "Manage review platform connections",
 }
 
 var connectionsListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List connections",
+	Use:     "list",
+	Aliases: []string{"ls"},
+	Short:   "List connections",
+	Example: `  starscope-cli connections list
+  starscope-cli c ls --output json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newAPIClient()
 		if err != nil {
@@ -38,9 +42,11 @@ var connectionsListCmd = &cobra.Command{
 }
 
 var connectionsShowCmd = &cobra.Command{
-	Use:   "show <id>",
-	Short: "Show a connection",
-	Args:  cobra.ExactArgs(1),
+	Use:     "show <id>",
+	Aliases: []string{"s"},
+	Short:   "Show a connection",
+	Example: `  starscope-cli connections show 5`,
+	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -113,4 +119,5 @@ func formatConnectionDetail(f *output.Formatter, c *models.Connection) error {
 func init() {
 	connectionsCmd.AddCommand(connectionsListCmd)
 	connectionsCmd.AddCommand(connectionsShowCmd)
+	defaultToList(connectionsCmd, connectionsListCmd)
 }
