@@ -30,6 +30,11 @@ var authLoginCmd = &cobra.Command{
 
 		token := flagToken
 		if token == "" {
+			fmt.Println("Authenticate with the Starscope API.")
+			fmt.Println()
+			fmt.Println("Don't have an account yet? Sign up at https://starscope.app")
+			fmt.Println("Generate a token at https://starscope.app/settings/api-tokens")
+			fmt.Println()
 			fmt.Print("Enter your Starscope API token: ")
 			bytePw, err := term.ReadPassword(int(syscall.Stdin))
 			fmt.Println()
