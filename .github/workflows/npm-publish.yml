@@ -21,6 +21,8 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+      - name: Copy README
+        run: cp ../README.md .
       - name: Set version from tag
         run: |
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
