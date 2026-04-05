@@ -171,6 +171,7 @@ var topicsReviewsCmd = &cobra.Command{
 
 func formatTopicList(f *output.Formatter, topics []models.Topic, meta *models.PaginationMeta) error {
 	headers := []string{"ID", "LABEL", "REVIEWS", "AVG RATING", "AVG SENTIMENT"}
+	f.WithColumnStyle(3, output.StyleRating)
 	rows := make([][]string, len(topics))
 	for i, t := range topics {
 		avgRating := "-"

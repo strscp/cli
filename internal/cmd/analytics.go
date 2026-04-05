@@ -105,6 +105,7 @@ func formatOverview(f *output.Formatter, o *models.AnalyticsOverview) error {
 
 func formatMetrics(f *output.Formatter, m *models.AnalyticsMetrics) error {
 	headers := []string{"DATE", "REVIEWS", "AVG RATING", "SENTIMENT"}
+	f.WithColumnStyle(2, output.StyleRating)
 	rows := make([][]string, len(m.DataPoints))
 	for i, dp := range m.DataPoints {
 		rows[i] = []string{

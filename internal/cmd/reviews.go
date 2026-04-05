@@ -136,6 +136,7 @@ var reviewsShowCmd = &cobra.Command{
 
 func formatReviewList(f *output.Formatter, reviews []models.Review, meta *models.PaginationMeta) error {
 	headers := []string{"ID", "PLATFORM", "AUTHOR", "RATING", "PUBLISHED", "TITLE"}
+	f.WithColumnStyle(3, output.StyleRating)
 	rows := make([][]string, len(reviews))
 	for i, r := range reviews {
 		title := ""

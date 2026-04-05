@@ -15,7 +15,7 @@ const (
 	colorGray   = "\033[90m"
 )
 
-func writeTable(w io.Writer, headers []string, rows [][]string, noColor bool) error {
+func writeTable(w io.Writer, headers []string, rows [][]string, noColor bool, styles map[int]ColumnStyleFunc) error {
 	if len(rows) == 0 {
 		fmt.Fprintln(w, "No results found.")
 		return nil
@@ -62,7 +62,11 @@ func writeTable(w io.Writer, headers []string, rows [][]string, noColor bool) er
 
 	// Print rows
 	for _, row := range rows {
-		fmt.Fprintln(w, formatRow(row, widths))
+		if !noColor && len(styles) > 0 {
+			fmt.Fprintln(w, formatRowWithStyles(row, widths, styles))
+		} else {
+			fmt.Fprintln(w, formatRow(row, widths))
+		}
 	}
 
 	return nil
@@ -103,18 +107,71 @@ func formatRow(cells []string, widths []int) string {
 	return strings.Join(parts, "  ")
 }
 
-// ColorRating returns a color-coded rating string.
-func ColorRating(rating int, noColor bool) string {
-	s := fmt.Sprintf("%d", rating)
-	if noColor {
-		return s
+func formatRowWithStyles(cells []string, widths []int, styles map[int]ColumnStyleFunc) string {
+	parts := make([]string, len(widths))
+	for i, width := range widths {
+		cell := ""
+		if i < len(cells) {
+			cell = cells[i]
+		}
+		if len(cell) > width {
+			cell = cell[:width-1] + "…"
+		}
+		if styleFn, ok := styles[i]; ok {
+			colored := styleFn(cell, false)
+			padding := width - len(cell)
+			if padding < 0 {
+				padding = 0
+			}
+			parts[i] = colored + strings.Repeat(" ", padding)
+		} else {
+			parts[i] = fmt.Sprintf("%-*s", width, cell)
+		}
+	}
+	return strings.Join(parts, "  ")
+}
+
+// StyleRating colors a rating value (1-5 scale, supports int and float strings).
+func StyleRating(value string, noColor bool) string {
+	if noColor || value == "-" {
+		return value
+	}
+	var rating float64
+	if _, err := fmt.Sscanf(value, "%f", &rating); err != nil {
+		return value
 	}
 	switch {
-	case rating >= 4:
-		return colorGreen + s + colorReset
-	case rating == 3:
-		return colorYellow + s + colorReset
+	case rating >= 4.0:
+		return colorGreen + value + colorReset
+	case rating >= 3.0:
+		return colorYellow + value + colorReset
 	default:
-		return colorRed + s + colorReset
+		return colorRed + value + colorReset
 	}
+}
+
+// StyleSeverity colors a severity string (critical/warning/info).
+func StyleSeverity(value string, noColor bool) string {
+	if noColor {
+		return value
+	}
+	switch value {
+	case "critical":
+		return colorRed + value + colorReset
+	case "warning":
+		return colorYellow + value + colorReset
+	default:
+		return colorGray + value + colorReset
+	}
+}
+
+// StyleBool colors a boolean string (true=green, false=red).
+func StyleBool(value string, noColor bool) string {
+	if noColor {
+		return value
+	}
+	if value == "true" {
+		return colorGreen + value + colorReset
+	}
+	return colorRed + value + colorReset
 }
