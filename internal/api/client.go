@@ -77,7 +77,7 @@ func NewClient(baseURL, token string, opts ...ClientOption) *Client {
 // newRequest creates an authenticated HTTP request.
 func (c *Client) newRequest(ctx context.Context, method, path string, params url.Values) (*http.Request, error) {
 	u := c.baseURL + path
-	if params != nil && len(params) > 0 {
+	if len(params) > 0 {
 		u += "?" + params.Encode()
 	}
 

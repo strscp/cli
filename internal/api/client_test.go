@@ -25,7 +25,7 @@ func TestClient_AuthHeader(t *testing.T) {
 	_, client := testServer(t, func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"id": 1, "name": "Test"}})
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"id": 1, "name": "Test"}})
 	})
 
 	_, err := client.Workspace.Show(context.Background())
@@ -38,7 +38,7 @@ func TestClient_WorkspaceHeader(t *testing.T) {
 	_, client := testServer(t, func(w http.ResponseWriter, r *http.Request) {
 		gotHeader = r.Header.Get("X-Workspace-Id")
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"id": 1, "name": "Test"}})
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"id": 1, "name": "Test"}})
 	})
 
 	_, err := client.Workspace.Show(context.Background())
@@ -51,7 +51,7 @@ func TestClient_NoWorkspaceHeader(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotHeader = r.Header.Get("X-Workspace-Id")
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"id": 1, "name": "Test"}})
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"id": 1, "name": "Test"}})
 	}))
 	defer srv.Close()
 
@@ -74,7 +74,7 @@ func TestClient_403(t *testing.T) {
 	_, client := testServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]any{"message": "API access requires a Pro plan"})
+		_ = json.NewEncoder(w).Encode(map[string]any{"message": "API access requires a Pro plan"})
 	})
 
 	_, err := client.Workspace.Show(context.Background())
@@ -95,7 +95,7 @@ func TestClient_422(t *testing.T) {
 	_, client := testServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"message": "Validation failed",
 			"errors":  map[string]any{"rating_min": []string{"must be between 1 and 5"}},
 		})
@@ -124,7 +124,7 @@ func TestReviewsList(t *testing.T) {
 		assert.Equal(t, "4", r.URL.Query().Get("rating_min"))
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(models.PaginatedResponse[models.Review]{
+		_ = json.NewEncoder(w).Encode(models.PaginatedResponse[models.Review]{
 			Data: []models.Review{
 				{ID: 1, Platform: "trustpilot", AuthorName: "John", Rating: 5},
 			},
@@ -148,7 +148,7 @@ func TestReviewsGet(t *testing.T) {
 
 		title := "Great service"
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"data": models.Review{ID: 42, Platform: "google", AuthorName: "Jane", Rating: 4, Title: &title},
 		})
 	})
@@ -165,7 +165,7 @@ func TestConnectionsList(t *testing.T) {
 		assert.Equal(t, "/connections", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(models.PaginatedResponse[models.Connection]{
+		_ = json.NewEncoder(w).Encode(models.PaginatedResponse[models.Connection]{
 			Data: []models.Connection{
 				{ID: 1, Platform: "trustpilot", Name: "My Store", IsActive: true, ReviewCount: 150},
 			},
@@ -184,7 +184,7 @@ func TestWorkspaceShow(t *testing.T) {
 		assert.Equal(t, "/workspace", r.URL.Path)
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"data": models.Workspace{ID: 1, Name: "Test Workspace", Slug: "test", PlanTier: "pro"},
 		})
 	})
