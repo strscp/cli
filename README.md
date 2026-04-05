@@ -14,6 +14,12 @@ Track sentiment, compare ratings, and surface insights across Trustpilot, Google
 curl -fsSL https://raw.githubusercontent.com/strscp/cli/main/install.sh | sh
 ```
 
+### npm
+
+```bash
+npm install -g @strscp/cli
+```
+
 ### GitHub Releases
 
 Download pre-built binaries from [GitHub Releases](https://github.com/strscp/cli/releases).
