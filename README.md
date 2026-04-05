@@ -1,6 +1,10 @@
 # starscope-cli
 
-Official CLI for the [Starscope](https://starscope.app) review analytics API.
+The official CLI for [Starscope](https://starscope.app) -- review intelligence on autopilot.
+
+Track sentiment, compare ratings, and surface insights across Trustpilot, Google, Feedback Company, and more. From your terminal.
+
+[Create a free account](https://starscope.app) to get started. No credit card required. Then [generate an API token](https://starscope.app/settings/api-tokens) to connect the CLI.
 
 ## Installation
 
@@ -131,10 +135,6 @@ starscope-cli reviews list --profile staging
 | `STARSCOPE_WORKSPACE_ID` | Workspace ID |
 | `STARSCOPE_CONFIG_DIR` | Config directory override |
 | `NO_COLOR` | Disable colored output |
-
-## API token
-
-Generate an API token in the Starscope dashboard under [Settings > API Tokens](https://starscope.app/settings/api-tokens). API access requires a Pro plan.
 
 ## License
 
