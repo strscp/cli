@@ -1,6 +1,6 @@
 # starscope-cli
 
-The official CLI for [Starscope](https://starscope.app) -- review intelligence on autopilot.
+The official CLI for [Starscope](https://starscope.app). Review intelligence on autopilot.
 
 Track sentiment, compare ratings, and surface insights across Trustpilot, Google, Feedback Company, and more. From your terminal.
 
@@ -163,7 +163,7 @@ starscope-cli reviews list --output table | cat    # explicit override
 
 ### Raw API responses
 
-Use `--raw` to get the unprocessed API response -- useful for debugging or when you need fields the CLI doesn't display:
+Use `--raw` to get the unprocessed API response. Useful for debugging or when you need fields the CLI doesn't display:
 
 ```bash
 starscope-cli reviews show 42 --raw
